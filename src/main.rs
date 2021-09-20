@@ -27,9 +27,9 @@ fn main() {
                 Ok(tree) => {
                     runtime::eval(&mut state, tree);
                 }
-                Err(reason) => println!("{:?}", reason),
+                Err(reason) => eprintln!("{:?}", reason),
             },
-            Err(reason) => println!("{:?}", reason),
+            Err(reason) => eprintln!("{:?}", reason),
         }
     }
 }
