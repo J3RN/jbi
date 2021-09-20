@@ -1,4 +1,3 @@
-use crate::runtime::Run;
 use std::io::{self, Write};
 
 mod lexer;
@@ -27,7 +26,7 @@ fn main() {
             Ok(toks) => match semantic_analyzer::analyze(toks) {
                 Ok(tree) => {
                     let mut output = String::new();
-                    state.eval(&mut output, tree);
+                    runtime::eval(&mut state, &mut output, tree);
                     println!("{}", output);
                 }
                 Err(reason) => println!("{:?}", reason),

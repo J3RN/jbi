@@ -5,10 +5,6 @@ pub struct State {
     head_index: usize,
 }
 
-pub trait Run {
-    fn eval(&mut self, output: &mut String, node: Node) -> ();
-}
-
 impl Default for State {
     fn default() -> State {
         State {
@@ -18,52 +14,50 @@ impl Default for State {
     }
 }
 
-impl Run for State {
-    fn eval(&mut self, output: &mut String, node: Node) {
-        match node {
-            Node::Root { children } => {
-                for node in children {
-                    self.eval(output, node);
+pub fn eval(state: &mut State, output: &mut String, node: Node) {
+    match node {
+        Node::Root { children } => {
+            for node in children {
+                eval(state, output, node);
+            }
+        }
+        Node::Loop { children, .. } => {
+            while state.nodes[state.head_index] != 0 {
+                for node in &children {
+                    eval(state, output, node.clone());
                 }
             }
-            Node::Loop { children, .. } => {
-                while self.nodes[self.head_index] != 0 {
-                    for node in &children {
-                        self.eval(output, node.clone());
-                    }
-                }
+        }
+        Node::Increment { .. } => {
+            if state.nodes[state.head_index] < 255 {
+                state.nodes[state.head_index] += 1;
+            } else {
+                panic!("Increment past 255!");
             }
-            Node::Increment { .. } => {
-                if self.nodes[self.head_index] < 255 {
-                    self.nodes[self.head_index] += 1;
-                } else {
-                    panic!("Increment past 255!");
-                }
+        }
+        Node::Decrement { .. } => {
+            if state.nodes[state.head_index] > 0 {
+                state.nodes[state.head_index] -= 1;
+            } else {
+                panic!("Decrement past zero!");
             }
-            Node::Decrement { .. } => {
-                if self.nodes[self.head_index] > 0 {
-                    self.nodes[self.head_index] -= 1;
-                } else {
-                    panic!("Decrement past zero!");
-                }
+        }
+        Node::MoveRight { .. } => {
+            if state.head_index < 9999 {
+                state.head_index += 1;
+            } else {
+                panic!("Index out of bounds!")
             }
-            Node::MoveRight { .. } => {
-                if self.head_index < 9999 {
-                    self.head_index += 1;
-                } else {
-                    panic!("Index out of bounds!")
-                }
+        }
+        Node::MoveLeft { .. } => {
+            if state.head_index > 0 {
+                state.head_index -= 1;
+            } else {
+                panic!("Index out of bounds!")
             }
-            Node::MoveLeft { .. } => {
-                if self.head_index > 0 {
-                    self.head_index -= 1;
-                } else {
-                    panic!("Index out of bounds!")
-                }
-            }
-            Node::Print { .. } => {
-                output.push(self.nodes[self.head_index] as char);
-            }
+        }
+        Node::Print { .. } => {
+            output.push(state.nodes[state.head_index] as char);
         }
     }
 }
