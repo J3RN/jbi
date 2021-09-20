@@ -25,7 +25,7 @@ fn main() {
         match lexer::lex(input, "stdin".to_string()) {
             Ok(toks) => match semantic_analyzer::analyze(toks) {
                 Ok(tree) => {
-                    runtime::eval(&mut state, tree);
+                    runtime::eval(&mut state, &tree);
                 }
                 Err(reason) => eprintln!("{:?}", reason),
             },

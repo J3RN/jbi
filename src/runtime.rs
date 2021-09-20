@@ -14,7 +14,7 @@ impl Default for State {
     }
 }
 
-pub fn eval(state: &mut State, node: Node) -> bool {
+pub fn eval(state: &mut State, node: &Node) -> bool {
     match node {
         Node::Root { children } => {
             for node in children {
@@ -26,8 +26,8 @@ pub fn eval(state: &mut State, node: Node) -> bool {
         }
         Node::Loop { children, .. } => {
             while state.nodes[state.head_index] != 0 {
-                for node in &children {
-                    if !eval(state, node.clone()) {
+                for node in children {
+                    if !eval(state, node) {
                         return false;
                     }
                 }
