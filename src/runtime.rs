@@ -14,50 +14,65 @@ impl Default for State {
     }
 }
 
-pub fn eval(state: &mut State, output: &mut String, node: Node) {
+pub fn eval(state: &mut State, node: Node) -> bool {
     match node {
         Node::Root { children } => {
             for node in children {
-                eval(state, output, node);
+                if !eval(state, node) {
+                    return false;
+                }
             }
+            true
         }
         Node::Loop { children, .. } => {
             while state.nodes[state.head_index] != 0 {
                 for node in &children {
-                    eval(state, output, node.clone());
+                    if !eval(state, node.clone()) {
+                        return false;
+                    }
                 }
             }
+            true
         }
         Node::Increment { .. } => {
             if state.nodes[state.head_index] < 255 {
                 state.nodes[state.head_index] += 1;
+                true
             } else {
-                panic!("Increment past 255!");
+                eprintln!("Increment node {} past 255!", state.head_index + 1);
+                false
             }
         }
         Node::Decrement { .. } => {
             if state.nodes[state.head_index] > 0 {
                 state.nodes[state.head_index] -= 1;
+                true
             } else {
-                panic!("Decrement past zero!");
+                eprintln!("Decrement node {} past zero!", state.head_index + 1);
+                false
             }
         }
         Node::MoveRight { .. } => {
             if state.head_index < 9999 {
                 state.head_index += 1;
+                true
             } else {
-                panic!("Index out of bounds!")
+                eprintln!("Tried to move head past last node!");
+                false
             }
         }
         Node::MoveLeft { .. } => {
             if state.head_index > 0 {
                 state.head_index -= 1;
+                true
             } else {
-                panic!("Index out of bounds!")
+                eprintln!("Tried to move the head before first node!");
+                false
             }
         }
         Node::Print { .. } => {
             print!("{}", (state.nodes[state.head_index] as char));
+            true
         }
     }
 }

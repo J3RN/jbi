@@ -20,6 +20,5 @@ You will be presented with a `jbi>` prompt. The state is retained across inputs 
 ## TODO
 
 - [ ] Don't immediately give up if a loop is unclosed. Give the user the opportunity to close it.
-- [ ] Don't `panic!` on runtime errors. Print an error and give the user another chance.
 - [ ] Tests, probably.
 - [ ] J3RN's Brainf*ck Compiler (JBC) :wink:
