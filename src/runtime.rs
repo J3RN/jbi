@@ -57,7 +57,7 @@ pub fn eval(state: &mut State, output: &mut String, node: Node) {
             }
         }
         Node::Print { .. } => {
-            output.push(state.nodes[state.head_index] as char);
+            print!("{}", (state.nodes[state.head_index] as char));
         }
     }
 }
