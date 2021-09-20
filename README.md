@@ -1,7 +1,7 @@
 # J3RN's Brainf*ck Interpreter (JBI)
 
 ```
-++++++++++ [ > ++++++++++ < - ] >++++ . --- . +++++++ .. +++ .
+++++++++++ [ > ++++++++++ < - ] >++++ . --- . +++++++ .. +++ . > +++++ [ > ++++++ < - ] >+++ .
 ```
 
 This is my first ever Rust project, so the code is probably really bad. Don't `@` me.
