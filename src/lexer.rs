@@ -26,31 +26,31 @@ pub fn lex(content: String, file: String) -> Result<Vec<Token>, Vec<Error>> {
     for cha in content.chars() {
         match cha {
             '+' => res.push(Token::Increment {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             '-' => res.push(Token::Decrement {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             '.' => res.push(Token::Print {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             '>' => res.push(Token::MoveRight {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             '<' => res.push(Token::MoveLeft {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             '[' => res.push(Token::OpenBracket {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             ']' => res.push(Token::CloseBracket {
-                line: line,
+                line,
                 file: file.clone(),
             }),
             '\n' => line = line + 1,
@@ -58,7 +58,7 @@ pub fn lex(content: String, file: String) -> Result<Vec<Token>, Vec<Error>> {
                 if !a.is_whitespace() {
                     errs.push(Error::BadTokens {
                         trigger: a,
-                        line: line,
+                        line,
                         file: file.clone(),
                     })
                 }
