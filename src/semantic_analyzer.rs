@@ -53,7 +53,7 @@ impl Display for Error<'_> {
     }
 }
 
-pub fn analyze<'a>(toks: &'a Vec<Token<'a>>) -> Result<Node<'a>, Vec<Error<'a>>> {
+pub fn analyze<'a>(toks: &'a [Token<'a>]) -> Result<Node<'a>, Vec<Error<'a>>> {
     let mut tok_iter = toks.iter().peekable();
 
     match parse_exp(&mut tok_iter) {
@@ -61,7 +61,7 @@ pub fn analyze<'a>(toks: &'a Vec<Token<'a>>) -> Result<Node<'a>, Vec<Error<'a>>>
             if let Some(Token::CloseBracket(loc)) = tok_iter.peek() {
                 Err(vec![Error::ExtraneousClose(loc)])
             } else {
-                Ok(Node::Root { children: children })
+                Ok(Node::Root { children })
             }
         }
         Err(errs) => Err(errs),
@@ -83,7 +83,7 @@ pub fn parse_exp<'a>(
                     Ok(loop_children) => match toks.peek() {
                         Some(Token::CloseBracket(_)) => {
                             children.push(Node::Loop {
-                                loc: loc,
+                                loc,
                                 children: loop_children,
                             });
                         }
@@ -99,11 +99,11 @@ pub fn parse_exp<'a>(
                 }
             }
             Some(Token::CloseBracket(_)) => break,
-            Some(Token::Increment(loc)) => children.push(Node::Increment { loc: loc }),
-            Some(Token::Decrement(loc)) => children.push(Node::Decrement { loc: loc }),
-            Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc: loc }),
-            Some(Token::MoveLeft(loc)) => children.push(Node::MoveLeft { loc: loc }),
-            Some(Token::Print(loc)) => children.push(Node::Print { loc: loc }),
+            Some(Token::Increment(loc)) => children.push(Node::Increment { loc }),
+            Some(Token::Decrement(loc)) => children.push(Node::Decrement { loc }),
+            Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc }),
+            Some(Token::MoveLeft(loc)) => children.push(Node::MoveLeft { loc }),
+            Some(Token::Print(loc)) => children.push(Node::Print { loc }),
             None => break,
         }
         toks.next();
