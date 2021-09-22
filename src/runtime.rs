@@ -57,18 +57,14 @@ pub fn eval<'a>(state: &mut State, node: &'a Node) -> Result<(), Error<'a>> {
     match node {
         Node::Root { children } => {
             for child in children {
-                if let Err(e) = eval(state, child) {
-                    return Err(e);
-                }
+                eval(state, child)?;
             }
             Ok(())
         }
         Node::Loop { children, .. } => {
             while state.nodes[state.head_index] != 0 {
                 for child in children {
-                    if let Err(e) = eval(state, child) {
-                        return Err(e);
-                    }
+                    eval(state, child)?;
                 }
             }
             Ok(())
