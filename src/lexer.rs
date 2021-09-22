@@ -18,7 +18,7 @@ pub enum Error {
     },
 }
 
-pub fn lex(content: String, file: String) -> Result<Vec<Token>, Vec<Error>> {
+pub fn lex(content: String, file: &str) -> Result<Vec<Token>, Vec<Error>> {
     let mut res = Vec::<Token>::new();
     let mut errs = Vec::<Error>::new();
     let mut line = 1;
@@ -27,31 +27,31 @@ pub fn lex(content: String, file: String) -> Result<Vec<Token>, Vec<Error>> {
         match cha {
             '+' => res.push(Token::Increment {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             '-' => res.push(Token::Decrement {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             '.' => res.push(Token::Print {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             '>' => res.push(Token::MoveRight {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             '<' => res.push(Token::MoveLeft {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             '[' => res.push(Token::OpenBracket {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             ']' => res.push(Token::CloseBracket {
                 line,
-                file: file.clone(),
+                file: file.to_string(),
             }),
             '\n' => line = line + 1,
             a => {
@@ -59,7 +59,7 @@ pub fn lex(content: String, file: String) -> Result<Vec<Token>, Vec<Error>> {
                     errs.push(Error::BadTokens {
                         trigger: a,
                         line,
-                        file: file.clone(),
+                        file: file.to_string(),
                     })
                 }
             }

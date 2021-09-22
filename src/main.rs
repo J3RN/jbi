@@ -22,7 +22,7 @@ fn main() {
             Err(_) => break,
         }
 
-        match lexer::lex(input, "stdin".to_string()) {
+        match lexer::lex(input, "stdin") {
             Ok(toks) => match semantic_analyzer::analyze(toks) {
                 Ok(tree) => {
                     runtime::eval(&mut state, &tree);
