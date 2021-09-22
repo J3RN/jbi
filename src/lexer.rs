@@ -23,8 +23,12 @@ impl Display for Error<'_> {
         match self {
             Error::BadToken {
                 trigger,
-                location: Location { line, file },
-            } => write!(f, "Bad token {} in {} on line {}", trigger, file, line),
+                location: Location { file, line, col },
+            } => write!(
+                f,
+                "Bad token {} in {} on line {} at column {}",
+                trigger, file, line, col
+            ),
         }
     }
 }
@@ -32,48 +36,31 @@ impl Display for Error<'_> {
 pub fn lex(content: String, file: &str) -> Result<Vec<Token>, Vec<Error>> {
     let mut res = Vec::<Token>::new();
     let mut errs = Vec::<Error>::new();
-    let mut line = 1;
 
-    for cha in content.chars() {
-        match cha {
-            '+' => res.push(Token::Increment(Location {
-                line: line,
-                file: file,
-            })),
-            '-' => res.push(Token::Decrement(Location {
-                line: line,
-                file: file,
-            })),
-            '.' => res.push(Token::Print(Location {
-                line: line,
-                file: file,
-            })),
-            '>' => res.push(Token::MoveRight(Location {
-                line: line,
-                file: file,
-            })),
-            '<' => res.push(Token::MoveLeft(Location {
-                line: line,
-                file: file,
-            })),
-            '[' => res.push(Token::OpenBracket(Location {
-                line: line,
-                file: file,
-            })),
-            ']' => res.push(Token::CloseBracket(Location {
-                line: line,
-                file: file,
-            })),
-            '\n' => line = line + 1,
-            a => {
-                if !a.is_whitespace() {
-                    errs.push(Error::BadToken {
-                        trigger: a,
-                        location: Location { file, line },
-                    })
+    for (lineno, content) in content.lines().enumerate() {
+        let line = lineno + 1;
+
+        for (colno, cha) in content.chars().enumerate() {
+            let col = colno + 1;
+
+            match cha {
+                '+' => res.push(Token::Increment(Location { file, line, col })),
+                '-' => res.push(Token::Decrement(Location { file, line, col })),
+                '.' => res.push(Token::Print(Location { file, line, col })),
+                '>' => res.push(Token::MoveRight(Location { file, line, col })),
+                '<' => res.push(Token::MoveLeft(Location { file, line, col })),
+                '[' => res.push(Token::OpenBracket(Location { file, line, col })),
+                ']' => res.push(Token::CloseBracket(Location { file, line, col })),
+                a => {
+                    if !a.is_whitespace() {
+                        errs.push(Error::BadToken {
+                            trigger: a,
+                            location: Location { file, line, col },
+                        })
+                    }
                 }
             }
-        };
+        }
     }
 
     if errs.is_empty() {

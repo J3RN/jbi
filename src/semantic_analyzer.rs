@@ -37,11 +37,19 @@ impl Display for Error<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Error::UnclosedBracketTmp => write!(f, "Unclosed bracket"),
-            Error::UnclosedBracket(Location { file, line }) => {
-                write!(f, "Unclosed bracket in {} on line {}", file, line)
+            Error::UnclosedBracket(Location { file, line, col }) => {
+                write!(
+                    f,
+                    "Unclosed '[' in {} on line {} at column {}",
+                    file, line, col
+                )
             }
-            Error::ExtraneousClose(Location { file, line }) => {
-                write!(f, "Extraneous closing bracket in {} on line {}", file, line)
+            Error::ExtraneousClose(Location { file, line, col }) => {
+                write!(
+                    f,
+                    "Extraneous ']' in {} on line {} at column {}",
+                    file, line, col
+                )
             }
         }
     }

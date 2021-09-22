@@ -6,7 +6,8 @@ mod semantic_analyzer;
 
 pub struct Location<'a> {
     file: &'a str,
-    line: i32,
+    line: usize,
+    col: usize,
 }
 
 fn main() {
