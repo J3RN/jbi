@@ -4,7 +4,6 @@ mod lexer;
 mod runtime;
 mod semantic_analyzer;
 
-#[derive(Debug)]
 pub struct Location<'a> {
     file: &'a str,
     line: i32,
@@ -33,9 +32,17 @@ fn main() {
                 Ok(tree) => {
                     runtime::eval(&mut state, &tree);
                 }
-                Err(reason) => eprintln!("{:?}", reason),
+                Err(errs) => {
+                    for err in errs {
+                        eprintln!("{}", err);
+                    }
+                }
             },
-            Err(reason) => eprintln!("{:?}", reason),
+            Err(errs) => {
+                for err in errs {
+                    eprintln!("{}", err);
+                }
+            }
         }
     }
 }

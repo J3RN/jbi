@@ -1,6 +1,6 @@
 use crate::Location;
+use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug)]
 pub enum Token<'a> {
     Increment(Location<'a>),
     Decrement(Location<'a>),
@@ -11,12 +11,22 @@ pub enum Token<'a> {
     CloseBracket(Location<'a>),
 }
 
-#[derive(Debug)]
 pub enum Error<'a> {
     BadToken {
         trigger: char,
         location: Location<'a>,
     },
+}
+
+impl Display for Error<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::BadToken {
+                trigger,
+                location: Location { line, file },
+            } => write!(f, "Bad token {} in {} on line {}", trigger, file, line),
+        }
+    }
 }
 
 pub fn lex(content: String, file: &str) -> Result<Vec<Token>, Vec<Error>> {

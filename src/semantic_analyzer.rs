@@ -1,7 +1,7 @@
 use crate::lexer::Token;
 use crate::Location;
+use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug)]
 pub enum Node<'a> {
     Root {
         children: Vec<Node<'a>>,
@@ -27,11 +27,24 @@ pub enum Node<'a> {
     },
 }
 
-#[derive(Debug)]
 pub enum Error<'a> {
     UnclosedBracketTmp,
     UnclosedBracket(&'a Location<'a>),
     ExtraneousClose(&'a Location<'a>),
+}
+
+impl Display for Error<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::UnclosedBracketTmp => write!(f, "Unclosed bracket"),
+            Error::UnclosedBracket(Location { file, line }) => {
+                write!(f, "Unclosed bracket in {} on line {}", file, line)
+            }
+            Error::ExtraneousClose(Location { file, line }) => {
+                write!(f, "Extraneous closing bracket in {} on line {}", file, line)
+            }
+        }
+    }
 }
 
 pub fn analyze<'a>(toks: &'a Vec<Token<'a>>) -> Result<Node<'a>, Vec<Error<'a>>> {
