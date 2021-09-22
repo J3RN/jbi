@@ -28,7 +28,6 @@ pub enum Node<'a> {
 }
 
 pub enum Error<'a> {
-    UnclosedBracketTmp,
     UnclosedBracket(&'a Location<'a>),
     ExtraneousClose(&'a Location<'a>),
 }
@@ -36,7 +35,6 @@ pub enum Error<'a> {
 impl Display for Error<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Error::UnclosedBracketTmp => write!(f, "Unclosed bracket"),
             Error::UnclosedBracket(Location { file, line, col }) => {
                 write!(
                     f,
@@ -56,38 +54,51 @@ impl Display for Error<'_> {
 }
 
 pub fn analyze<'a>(toks: &'a Vec<Token<'a>>) -> Result<Node<'a>, Vec<Error<'a>>> {
-    let mut tok_iter = toks.iter();
+    let mut tok_iter = toks.iter().peekable();
 
     match parse_exp(&mut tok_iter) {
-        Ok(children) => Ok(Node::Root { children: children }),
+        Ok(children) => {
+            if let Some(Token::CloseBracket(loc)) = tok_iter.peek() {
+                Err(vec![Error::ExtraneousClose(loc)])
+            } else {
+                Ok(Node::Root { children: children })
+            }
+        }
         Err(errs) => Err(errs),
     }
 }
 
 pub fn parse_exp<'a>(
-    toks: &mut std::slice::Iter<'a, Token<'a>>,
+    toks: &mut std::iter::Peekable<std::slice::Iter<'a, Token<'a>>>,
 ) -> Result<Vec<Node<'a>>, Vec<Error<'a>>> {
     let mut children = Vec::new();
     let mut errs = Vec::new();
 
     loop {
-        match toks.next() {
-            Some(Token::OpenBracket(loc)) => match parse_loop(toks) {
-                Ok(loop_children) => children.push(Node::Loop {
-                    loc: loc,
-                    children: loop_children,
-                }),
-                Err(loop_errs) => {
-                    for err in loop_errs {
-                        if let Error::UnclosedBracketTmp = err {
-                            errs.push(Error::UnclosedBracket(loc))
-                        } else {
-                            errs.push(err)
+        match toks.peek() {
+            Some(Token::OpenBracket(loc)) => {
+                toks.next();
+
+                match parse_exp(toks) {
+                    Ok(loop_children) => match toks.peek() {
+                        Some(Token::CloseBracket(_)) => {
+                            children.push(Node::Loop {
+                                loc: loc,
+                                children: loop_children,
+                            });
                         }
+                        _ => {
+                            errs.push(Error::UnclosedBracket(loc));
+                            break;
+                        }
+                    },
+                    Err(loop_errs) => {
+                        errs.extend(loop_errs);
+                        break;
                     }
                 }
-            },
-            Some(Token::CloseBracket(loc)) => errs.push(Error::ExtraneousClose(loc)),
+            }
+            Some(Token::CloseBracket(_)) => break,
             Some(Token::Increment(loc)) => children.push(Node::Increment { loc: loc }),
             Some(Token::Decrement(loc)) => children.push(Node::Decrement { loc: loc }),
             Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc: loc }),
@@ -95,41 +106,7 @@ pub fn parse_exp<'a>(
             Some(Token::Print(loc)) => children.push(Node::Print { loc: loc }),
             None => break,
         }
-    }
-
-    if errs.is_empty() {
-        Ok(children)
-    } else {
-        Err(errs)
-    }
-}
-
-pub fn parse_loop<'a>(
-    toks: &mut std::slice::Iter<'a, Token>,
-) -> Result<Vec<Node<'a>>, Vec<Error<'a>>> {
-    let mut children = Vec::new();
-    let mut errs = Vec::new();
-
-    loop {
-        match toks.next() {
-            Some(Token::CloseBracket(_)) => break,
-            Some(Token::OpenBracket(loc)) => match parse_loop(toks) {
-                Ok(loop_children) => children.push(Node::Loop {
-                    loc: loc,
-                    children: loop_children,
-                }),
-                Err(loop_errs) => errs.extend(loop_errs),
-            },
-            Some(Token::Increment(loc)) => children.push(Node::Increment { loc: loc }),
-            Some(Token::Decrement(loc)) => children.push(Node::Decrement { loc: loc }),
-            Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc: loc }),
-            Some(Token::MoveLeft(loc)) => children.push(Node::MoveLeft { loc: loc }),
-            Some(Token::Print(loc)) => children.push(Node::Print { loc: loc }),
-            None => {
-                errs.push(Error::UnclosedBracketTmp);
-                break;
-            }
-        }
+        toks.next();
     }
 
     if errs.is_empty() {
