@@ -14,65 +14,72 @@ impl Default for State {
     }
 }
 
-pub fn eval(state: &mut State, node: &Node) -> bool {
+pub enum Error {
+    NodeOverflow,
+    NodeUnderflow,
+    HeadOverflow,
+    HeadUnderflow,
+}
+
+pub fn eval(state: &mut State, node: &Node) -> Result<(), Error> {
     match node {
         Node::Root { children } => {
-            for node in children {
-                if !eval(state, node) {
-                    return false;
+            for child in children {
+                if let Err(e) = eval(state, child) {
+                    return Err(e);
                 }
             }
-            true
+            Ok(())
         }
         Node::Loop { children, .. } => {
             while state.nodes[state.head_index] != 0 {
-                for node in children {
-                    if !eval(state, node) {
-                        return false;
+                for child in children {
+                    if let Err(e) = eval(state, child) {
+                        return Err(e);
                     }
                 }
             }
-            true
+            Ok(())
         }
         Node::Increment { .. } => {
             if state.nodes[state.head_index] < 255 {
                 state.nodes[state.head_index] += 1;
-                true
+                Ok(())
             } else {
                 eprintln!("Increment node {} past 255!", state.head_index + 1);
-                false
+                Err(Error::NodeOverflow)
             }
         }
         Node::Decrement { .. } => {
             if state.nodes[state.head_index] > 0 {
                 state.nodes[state.head_index] -= 1;
-                true
+                Ok(())
             } else {
                 eprintln!("Decrement node {} past zero!", state.head_index + 1);
-                false
+                Err(Error::NodeUnderflow)
             }
         }
         Node::MoveRight { .. } => {
             if state.head_index < 9999 {
                 state.head_index += 1;
-                true
+                Ok(())
             } else {
                 eprintln!("Tried to move head past last node!");
-                false
+                Err(Error::HeadOverflow)
             }
         }
         Node::MoveLeft { .. } => {
             if state.head_index > 0 {
                 state.head_index -= 1;
-                true
+                Ok(())
             } else {
                 eprintln!("Tried to move the head before first node!");
-                false
+                Err(Error::HeadUnderflow)
             }
         }
         Node::Print { .. } => {
             print!("{}", (state.nodes[state.head_index] as char));
-            true
+            Ok(())
         }
     }
 }
