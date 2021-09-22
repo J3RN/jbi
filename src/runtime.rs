@@ -24,32 +24,30 @@ pub enum Error<'a> {
 
 impl Display for Error<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let loc: &Location;
-
-        let res = match self {
-            Error::NodeOverflow(node, eloc) => {
-                loc = eloc;
-                writeln!(f, "Tried to increment node {} past 255!", node)
+        let loc = match self {
+            Error::NodeOverflow(node, loc) => {
+                writeln!(f, "Tried to increment node {} past 255!", node)?;
+                loc
             }
-            Error::NodeUnderflow(node, eloc) => {
-                loc = eloc;
-                writeln!(f, "Tried to decrement node {} past zero!", node)
+            Error::NodeUnderflow(node, loc) => {
+                writeln!(f, "Tried to decrement node {} past zero!", node)?;
+                loc
             }
-            Error::HeadOverflow(eloc) => {
-                loc = eloc;
-                writeln!(f, "Tried to move the head past the last node!")
+            Error::HeadOverflow(loc) => {
+                writeln!(f, "Tried to move the head past the last node!")?;
+                loc
             }
-            Error::HeadUnderflow(eloc) => {
-                loc = eloc;
-                writeln!(f, "Tried to move the head before first node!")
+            Error::HeadUnderflow(loc) => {
+                writeln!(f, "Tried to move the head before first node!")?;
+                loc
             }
         };
 
-        res.and(write!(
+        write!(
             f,
             "Offending instruction in {} on line {} at column {}",
             loc.file, loc.line, loc.col
-        ))
+        )
     }
 }
 
