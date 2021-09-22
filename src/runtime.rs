@@ -1,4 +1,5 @@
-use crate::semantic_analyzer::Node;
+use crate::{semantic_analyzer::Node, Location};
+use std::fmt::{self, Display, Formatter};
 
 pub struct State {
     nodes: [u8; 10000],
@@ -14,14 +15,45 @@ impl Default for State {
     }
 }
 
-pub enum Error {
-    NodeOverflow,
-    NodeUnderflow,
-    HeadOverflow,
-    HeadUnderflow,
+pub enum Error<'a> {
+    NodeOverflow(usize, &'a Location<'a>),
+    NodeUnderflow(usize, &'a Location<'a>),
+    HeadOverflow(&'a Location<'a>),
+    HeadUnderflow(&'a Location<'a>),
 }
 
-pub fn eval(state: &mut State, node: &Node) -> Result<(), Error> {
+impl Display for Error<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let loc: &Location;
+
+        let res = match self {
+            Error::NodeOverflow(node, eloc) => {
+                loc = eloc;
+                writeln!(f, "Tried to increment node {} past 255!", node)
+            }
+            Error::NodeUnderflow(node, eloc) => {
+                loc = eloc;
+                writeln!(f, "Tried to decrement node {} past zero!", node)
+            }
+            Error::HeadOverflow(eloc) => {
+                loc = eloc;
+                writeln!(f, "Tried to move the head past the last node!")
+            }
+            Error::HeadUnderflow(eloc) => {
+                loc = eloc;
+                writeln!(f, "Tried to move the head before first node!")
+            }
+        };
+
+        res.and(write!(
+            f,
+            "Offending instruction in {} on line {} at column {}",
+            loc.file, loc.line, loc.col
+        ))
+    }
+}
+
+pub fn eval<'a>(state: &mut State, node: &'a Node) -> Result<(), Error<'a>> {
     match node {
         Node::Root { children } => {
             for child in children {
@@ -41,40 +73,36 @@ pub fn eval(state: &mut State, node: &Node) -> Result<(), Error> {
             }
             Ok(())
         }
-        Node::Increment { .. } => {
+        Node::Increment { loc } => {
             if state.nodes[state.head_index] < 255 {
                 state.nodes[state.head_index] += 1;
                 Ok(())
             } else {
-                eprintln!("Increment node {} past 255!", state.head_index + 1);
-                Err(Error::NodeOverflow)
+                Err(Error::NodeOverflow(state.head_index + 1, loc))
             }
         }
-        Node::Decrement { .. } => {
+        Node::Decrement { loc } => {
             if state.nodes[state.head_index] > 0 {
                 state.nodes[state.head_index] -= 1;
                 Ok(())
             } else {
-                eprintln!("Decrement node {} past zero!", state.head_index + 1);
-                Err(Error::NodeUnderflow)
+                Err(Error::NodeUnderflow(state.head_index + 1, loc))
             }
         }
-        Node::MoveRight { .. } => {
+        Node::MoveRight { loc } => {
             if state.head_index < 9999 {
                 state.head_index += 1;
                 Ok(())
             } else {
-                eprintln!("Tried to move head past last node!");
-                Err(Error::HeadOverflow)
+                Err(Error::HeadOverflow(loc))
             }
         }
-        Node::MoveLeft { .. } => {
+        Node::MoveLeft { loc } => {
             if state.head_index > 0 {
                 state.head_index -= 1;
                 Ok(())
             } else {
-                eprintln!("Tried to move the head before first node!");
-                Err(Error::HeadUnderflow)
+                Err(Error::HeadUnderflow(loc))
             }
         }
         Node::Print { .. } => {

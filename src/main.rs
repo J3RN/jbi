@@ -31,8 +31,8 @@ fn main() {
         match lexer::lex(input, "stdin") {
             Ok(toks) => match semantic_analyzer::analyze(&toks) {
                 Ok(tree) => {
-                    if let Err(_) = runtime::eval(&mut state, &tree) {
-                        eprintln!("Execution stopped with errors");
+                    if let Err(e) = runtime::eval(&mut state, &tree) {
+                        eprintln!("{}", e);
                     }
                 }
                 Err(errs) => {
