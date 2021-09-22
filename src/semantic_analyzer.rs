@@ -33,8 +33,8 @@ pub fn analyze(toks: Vec<Token>) -> Result<Node, Vec<Error>> {
 }
 
 pub fn parse_exp(parent: &mut Node, errs: &mut Vec<Error>, toks: &mut std::slice::Iter<Token>) {
-    match parent {
-        Node::Root { children } => loop {
+    if let Node::Root { children } = parent {
+        loop {
             match toks.next() {
                 Some(tok @ Token::OpenBracket { .. }) => {
                     let mut new_node = Node::Loop {
@@ -65,14 +65,15 @@ pub fn parse_exp(parent: &mut Node, errs: &mut Vec<Error>, toks: &mut std::slice
                 Some(tok @ Token::Print { .. }) => children.push(Node::Print { tok: tok.clone() }),
                 None => break,
             }
-        },
-        _ => panic!("Expr parent not root!"),
+        }
+    } else {
+        panic!("Expr parent not root!")
     }
 }
 
 pub fn parse_loop(parent: &mut Node, errs: &mut Vec<Error>, toks: &mut std::slice::Iter<Token>) {
-    match parent {
-        Node::Loop { tok, children } => loop {
+    if let Node::Loop { tok, children } = parent {
+        loop {
             match toks.next() {
                 Some(Token::CloseBracket { .. }) => break,
                 Some(Token::OpenBracket { .. }) => {
@@ -96,17 +97,19 @@ pub fn parse_loop(parent: &mut Node, errs: &mut Vec<Error>, toks: &mut std::slic
                     children.push(Node::MoveLeft { tok: tok.clone() })
                 }
                 Some(tok @ Token::Print { .. }) => children.push(Node::Print { tok: tok.clone() }),
-                None => match tok {
-                    Token::OpenBracket { file, line } => {
+                None => {
+                    if let Token::OpenBracket { file, line } = tok {
                         errs.push(Error {
                             message: format!("Unclosed bracket in {} at {}", file, line),
                         });
                         break;
+                    } else {
+                        panic!("Loop parent token not '['!")
                     }
-                    _ => panic!("Loop parent token not '['!"),
-                },
+                }
             }
-        },
-        _ => panic!("Loop parent not loop!"),
+        }
+    } else {
+        panic!("Loop parent not loop!")
     }
 }
