@@ -4,6 +4,12 @@ mod lexer;
 mod runtime;
 mod semantic_analyzer;
 
+#[derive(Debug)]
+pub struct Location<'a> {
+    file: &'a str,
+    line: i32,
+}
+
 fn main() {
     let stdin = io::stdin();
     let mut state = runtime::State::default();
@@ -23,7 +29,7 @@ fn main() {
         }
 
         match lexer::lex(input, "stdin") {
-            Ok(toks) => match semantic_analyzer::analyze(toks) {
+            Ok(toks) => match semantic_analyzer::analyze(&toks) {
                 Ok(tree) => {
                     runtime::eval(&mut state, &tree);
                 }

@@ -1,20 +1,21 @@
-#[derive(Debug, Clone)]
-pub enum Token {
-    Increment { line: i32, file: String },
-    Decrement { line: i32, file: String },
-    Print { line: i32, file: String },
-    MoveRight { line: i32, file: String },
-    MoveLeft { line: i32, file: String },
-    OpenBracket { line: i32, file: String },
-    CloseBracket { line: i32, file: String },
+use crate::Location;
+
+#[derive(Debug)]
+pub enum Token<'a> {
+    Increment(Location<'a>),
+    Decrement(Location<'a>),
+    Print(Location<'a>),
+    MoveRight(Location<'a>),
+    MoveLeft(Location<'a>),
+    OpenBracket(Location<'a>),
+    CloseBracket(Location<'a>),
 }
 
 #[derive(Debug)]
-pub enum Error {
-    BadTokens {
+pub enum Error<'a> {
+    BadToken {
         trigger: char,
-        line: i32,
-        file: String,
+        location: Location<'a>,
     },
 }
 
@@ -25,41 +26,40 @@ pub fn lex(content: String, file: &str) -> Result<Vec<Token>, Vec<Error>> {
 
     for cha in content.chars() {
         match cha {
-            '+' => res.push(Token::Increment {
-                line,
-                file: file.to_string(),
-            }),
-            '-' => res.push(Token::Decrement {
-                line,
-                file: file.to_string(),
-            }),
-            '.' => res.push(Token::Print {
-                line,
-                file: file.to_string(),
-            }),
-            '>' => res.push(Token::MoveRight {
-                line,
-                file: file.to_string(),
-            }),
-            '<' => res.push(Token::MoveLeft {
-                line,
-                file: file.to_string(),
-            }),
-            '[' => res.push(Token::OpenBracket {
-                line,
-                file: file.to_string(),
-            }),
-            ']' => res.push(Token::CloseBracket {
-                line,
-                file: file.to_string(),
-            }),
+            '+' => res.push(Token::Increment(Location {
+                line: line,
+                file: file,
+            })),
+            '-' => res.push(Token::Decrement(Location {
+                line: line,
+                file: file,
+            })),
+            '.' => res.push(Token::Print(Location {
+                line: line,
+                file: file,
+            })),
+            '>' => res.push(Token::MoveRight(Location {
+                line: line,
+                file: file,
+            })),
+            '<' => res.push(Token::MoveLeft(Location {
+                line: line,
+                file: file,
+            })),
+            '[' => res.push(Token::OpenBracket(Location {
+                line: line,
+                file: file,
+            })),
+            ']' => res.push(Token::CloseBracket(Location {
+                line: line,
+                file: file,
+            })),
             '\n' => line = line + 1,
             a => {
                 if !a.is_whitespace() {
-                    errs.push(Error::BadTokens {
+                    errs.push(Error::BadToken {
                         trigger: a,
-                        line,
-                        file: file.to_string(),
+                        location: Location { file, line },
                     })
                 }
             }

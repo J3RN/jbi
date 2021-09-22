@@ -1,115 +1,119 @@
 use crate::lexer::Token;
+use crate::Location;
 
-#[derive(Debug, Clone)]
-pub enum Node {
-    Root { children: Vec<Node> },
-    Loop { tok: Token, children: Vec<Node> },
-    Increment { tok: Token },
-    Decrement { tok: Token },
-    MoveRight { tok: Token },
-    MoveLeft { tok: Token },
-    Print { tok: Token },
+#[derive(Debug)]
+pub enum Node<'a> {
+    Root {
+        children: Vec<Node<'a>>,
+    },
+    Loop {
+        loc: &'a Location<'a>,
+        children: Vec<Node<'a>>,
+    },
+    Increment {
+        loc: &'a Location<'a>,
+    },
+    Decrement {
+        loc: &'a Location<'a>,
+    },
+    MoveRight {
+        loc: &'a Location<'a>,
+    },
+    MoveLeft {
+        loc: &'a Location<'a>,
+    },
+    Print {
+        loc: &'a Location<'a>,
+    },
 }
 
 #[derive(Debug)]
-pub struct Error {
-    message: String,
+pub enum Error<'a> {
+    UnclosedBracketTmp,
+    UnclosedBracket(&'a Location<'a>),
+    ExtraneousClose(&'a Location<'a>),
 }
 
-pub fn analyze(toks: Vec<Token>) -> Result<Node, Vec<Error>> {
+pub fn analyze<'a>(toks: &'a Vec<Token<'a>>) -> Result<Node<'a>, Vec<Error<'a>>> {
     let mut tok_iter = toks.iter();
-    let mut errs = Vec::new();
-    let mut root = Node::Root {
-        children: Vec::new(),
-    };
 
-    parse_exp(&mut root, &mut errs, &mut tok_iter);
+    match parse_exp(&mut tok_iter) {
+        Ok(children) => Ok(Node::Root { children: children }),
+        Err(errs) => Err(errs),
+    }
+}
+
+pub fn parse_exp<'a>(
+    toks: &mut std::slice::Iter<'a, Token<'a>>,
+) -> Result<Vec<Node<'a>>, Vec<Error<'a>>> {
+    let mut children = Vec::new();
+    let mut errs = Vec::new();
+
+    loop {
+        match toks.next() {
+            Some(Token::OpenBracket(loc)) => match parse_loop(toks) {
+                Ok(loop_children) => children.push(Node::Loop {
+                    loc: loc,
+                    children: loop_children,
+                }),
+                Err(loop_errs) => {
+                    for err in loop_errs {
+                        if let Error::UnclosedBracketTmp = err {
+                            errs.push(Error::UnclosedBracket(loc))
+                        } else {
+                            errs.push(err)
+                        }
+                    }
+                }
+            },
+            Some(Token::CloseBracket(loc)) => errs.push(Error::ExtraneousClose(loc)),
+            Some(Token::Increment(loc)) => children.push(Node::Increment { loc: loc }),
+            Some(Token::Decrement(loc)) => children.push(Node::Decrement { loc: loc }),
+            Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc: loc }),
+            Some(Token::MoveLeft(loc)) => children.push(Node::MoveLeft { loc: loc }),
+            Some(Token::Print(loc)) => children.push(Node::Print { loc: loc }),
+            None => break,
+        }
+    }
 
     if errs.is_empty() {
-        Ok(root)
+        Ok(children)
     } else {
         Err(errs)
     }
 }
 
-pub fn parse_exp(parent: &mut Node, errs: &mut Vec<Error>, toks: &mut std::slice::Iter<Token>) {
-    if let Node::Root { children } = parent {
-        loop {
-            match toks.next() {
-                Some(tok @ Token::OpenBracket { .. }) => {
-                    let mut new_node = Node::Loop {
-                        tok: tok.clone(),
-                        children: Vec::new(),
-                    };
-                    parse_loop(&mut new_node, errs, toks);
-                    children.push(new_node);
-                }
-                Some(Token::CloseBracket { file, line }) => errs.push(Error {
-                    message: format!(
-                        "Found extraneous close bracket in {} on line {}",
-                        file, line
-                    ),
-                }),
-                Some(tok @ Token::Increment { .. }) => {
-                    children.push(Node::Increment { tok: tok.clone() })
-                }
-                Some(tok @ Token::Decrement { .. }) => {
-                    children.push(Node::Decrement { tok: tok.clone() })
-                }
-                Some(tok @ Token::MoveRight { .. }) => {
-                    children.push(Node::MoveRight { tok: tok.clone() })
-                }
-                Some(tok @ Token::MoveLeft { .. }) => {
-                    children.push(Node::MoveLeft { tok: tok.clone() })
-                }
-                Some(tok @ Token::Print { .. }) => children.push(Node::Print { tok: tok.clone() }),
-                None => break,
-            }
-        }
-    } else {
-        panic!("Expr parent not root!")
-    }
-}
+pub fn parse_loop<'a>(
+    toks: &mut std::slice::Iter<'a, Token>,
+) -> Result<Vec<Node<'a>>, Vec<Error<'a>>> {
+    let mut children = Vec::new();
+    let mut errs = Vec::new();
 
-pub fn parse_loop(parent: &mut Node, errs: &mut Vec<Error>, toks: &mut std::slice::Iter<Token>) {
-    if let Node::Loop { tok, children } = parent {
-        loop {
-            match toks.next() {
-                Some(Token::CloseBracket { .. }) => break,
-                Some(Token::OpenBracket { .. }) => {
-                    let mut new_node = Node::Loop {
-                        tok: tok.clone(),
-                        children: Vec::new(),
-                    };
-                    parse_loop(&mut new_node, errs, toks);
-                    children.push(new_node);
-                }
-                Some(tok @ Token::Increment { .. }) => {
-                    children.push(Node::Increment { tok: tok.clone() })
-                }
-                Some(tok @ Token::Decrement { .. }) => {
-                    children.push(Node::Decrement { tok: tok.clone() })
-                }
-                Some(tok @ Token::MoveRight { .. }) => {
-                    children.push(Node::MoveRight { tok: tok.clone() })
-                }
-                Some(tok @ Token::MoveLeft { .. }) => {
-                    children.push(Node::MoveLeft { tok: tok.clone() })
-                }
-                Some(tok @ Token::Print { .. }) => children.push(Node::Print { tok: tok.clone() }),
-                None => {
-                    if let Token::OpenBracket { file, line } = tok {
-                        errs.push(Error {
-                            message: format!("Unclosed bracket in {} at {}", file, line),
-                        });
-                        break;
-                    } else {
-                        panic!("Loop parent token not '['!")
-                    }
-                }
+    loop {
+        match toks.next() {
+            Some(Token::CloseBracket(_)) => break,
+            Some(Token::OpenBracket(loc)) => match parse_loop(toks) {
+                Ok(loop_children) => children.push(Node::Loop {
+                    loc: loc,
+                    children: loop_children,
+                }),
+                Err(loop_errs) => errs.extend(loop_errs),
+            },
+            Some(Token::Increment(loc)) => children.push(Node::Increment { loc: loc }),
+            Some(Token::Decrement(loc)) => children.push(Node::Decrement { loc: loc }),
+            Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc: loc }),
+            Some(Token::MoveLeft(loc)) => children.push(Node::MoveLeft { loc: loc }),
+            Some(Token::Print(loc)) => children.push(Node::Print { loc: loc }),
+            None => {
+                errs.push(Error::UnclosedBracketTmp);
+                break;
             }
         }
+    }
+
+    if errs.is_empty() {
+        Ok(children)
     } else {
-        panic!("Loop parent not loop!")
+        Err(errs)
     }
 }
