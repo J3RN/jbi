@@ -1,5 +1,5 @@
 use crate::{semantic_analyzer::Node, Location};
-use std::fmt::{self, Display, Formatter};
+use annotate_snippets::snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
 
 pub struct State {
     nodes: [u8; 10000],
@@ -22,32 +22,116 @@ pub enum Error<'a> {
     HeadUnderflow(&'a Location<'a>),
 }
 
-impl Display for Error<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let loc = match self {
-            Error::NodeOverflow(node, loc) => {
-                writeln!(f, "Tried to increment node {} past 255!", node)?;
-                loc
-            }
-            Error::NodeUnderflow(node, loc) => {
-                writeln!(f, "Tried to decrement node {} past zero!", node)?;
-                loc
-            }
-            Error::HeadOverflow(loc) => {
-                writeln!(f, "Tried to move the head past the last node!")?;
-                loc
-            }
-            Error::HeadUnderflow(loc) => {
-                writeln!(f, "Tried to move the head before first node!")?;
-                loc
-            }
-        };
-
-        write!(
-            f,
-            "Offending instruction in {} on line {} at column {}",
-            loc.file, loc.line, loc.col
-        )
+impl crate::ErrorOutput for Error<'_> {
+    fn to_error(&self) -> Snippet {
+        match self {
+            Error::NodeOverflow(
+                ..,
+                Location {
+                    file,
+                    line,
+                    lineno,
+                    range,
+                },
+            ) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Node Overflow"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
+            Error::NodeUnderflow(
+                ..,
+                Location {
+                    file,
+                    line,
+                    lineno,
+                    range,
+                },
+            ) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Node Underflow"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
+            Error::HeadOverflow(Location {
+                file,
+                line,
+                lineno,
+                range,
+            }) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Head Overflow"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
+            Error::HeadUnderflow(Location {
+                file,
+                line,
+                lineno,
+                range,
+            }) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Head Underflow"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::lexer::Token;
 use crate::Location;
-use std::fmt::{self, Display, Formatter};
+use annotate_snippets::snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
 
 pub enum Node<'a> {
     Root {
@@ -32,23 +32,59 @@ pub enum Error<'a> {
     ExtraneousClose(&'a Location<'a>),
 }
 
-impl Display for Error<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl crate::ErrorOutput for Error<'_> {
+    fn to_error(&self) -> Snippet {
         match self {
-            Error::UnclosedBracket(Location { file, line, col }) => {
-                write!(
-                    f,
-                    "Unclosed '[' in {} on line {} at column {}",
-                    file, line, col
-                )
-            }
-            Error::ExtraneousClose(Location { file, line, col }) => {
-                write!(
-                    f,
-                    "Extraneous ']' in {} on line {} at column {}",
-                    file, line, col
-                )
-            }
+            Error::UnclosedBracket(Location {
+                file,
+                line,
+                lineno,
+                range,
+            }) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Unclosed Bracket"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
+            Error::ExtraneousClose(Location {
+                file,
+                line,
+                lineno,
+                range,
+            }) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Extraneous Close Bracket"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
         }
     }
 }

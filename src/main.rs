@@ -1,3 +1,4 @@
+use annotate_snippets::{display_list::DisplayList, snippet::Snippet};
 use std::io::{self, Write};
 
 mod lexer;
@@ -6,8 +7,13 @@ mod semantic_analyzer;
 
 pub struct Location<'a> {
     file: &'a str,
-    line: usize,
-    col: usize,
+    line: &'a str,
+    lineno: usize,
+    range: (usize, usize),
+}
+
+pub trait ErrorOutput {
+    fn to_error(&self) -> Snippet;
 }
 
 fn main() {
@@ -28,22 +34,25 @@ fn main() {
             Err(_) => break,
         }
 
-        match lexer::lex(input, "stdin") {
+        match lexer::lex(&input, "stdin") {
             Ok(toks) => match semantic_analyzer::analyze(&toks) {
                 Ok(tree) => {
-                    if let Err(e) = runtime::eval(&mut state, &tree) {
-                        eprintln!("{}", e);
+                    if let Err(err) = runtime::eval(&mut state, &tree) {
+                        let dl = DisplayList::from(err.to_error());
+                        eprintln!("{}", dl);
                     }
                 }
                 Err(errs) => {
                     for err in errs {
-                        eprintln!("{}", err);
+                        let dl = DisplayList::from(err.to_error());
+                        eprintln!("{}", dl);
                     }
                 }
             },
             Err(errs) => {
                 for err in errs {
-                    eprintln!("{}", err);
+                    let dl = DisplayList::from(err.to_error());
+                    eprintln!("{}", dl);
                 }
             }
         }

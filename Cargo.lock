@@ -3,5 +3,23 @@
 version = 3
 
 [[package]]
+name = "annotate-snippets"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3b9d411ecbaf79885c6df4d75fff75858d5995ff25385657a28af47e82f9c36"
+dependencies = [
+ "unicode-width",
+]
+
+[[package]]
 name = "jbi"
 version = "0.1.0"
+dependencies = [
+ "annotate-snippets",
+]
+
+[[package]]
+name = "unicode-width"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
