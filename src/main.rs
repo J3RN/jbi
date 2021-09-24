@@ -46,10 +46,10 @@ fn run_file(filename: &str) {
 
 fn run_repl() {
     let stdin = io::stdin();
+    let mut state = runtime::State::default();
 
     loop {
         let mut input = String::new();
-        let mut state = runtime::State::default();
 
         print!("jbi> ");
         io::stdout().flush().unwrap();
