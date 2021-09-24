@@ -25,6 +25,9 @@ pub enum Node<'a> {
     Print {
         loc: &'a Location<'a>,
     },
+    Read {
+        loc: &'a Location<'a>,
+    },
 }
 
 pub enum Error<'a> {
@@ -140,6 +143,7 @@ pub fn parse_exp<'a>(
             Some(Token::MoveRight(loc)) => children.push(Node::MoveRight { loc }),
             Some(Token::MoveLeft(loc)) => children.push(Node::MoveLeft { loc }),
             Some(Token::Print(loc)) => children.push(Node::Print { loc }),
+            Some(Token::Read(loc)) => children.push(Node::Read { loc }),
             None => break,
         }
         toks.next();

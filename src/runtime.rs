@@ -1,5 +1,6 @@
 use crate::{semantic_analyzer::Node, Location};
 use annotate_snippets::snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
+use std::io::Read;
 
 pub struct State {
     nodes: [u8; 10000],
@@ -20,6 +21,7 @@ pub enum Error<'a> {
     NodeUnderflow(usize, &'a Location<'a>),
     HeadOverflow(&'a Location<'a>),
     HeadUnderflow(&'a Location<'a>),
+    ReadFailure(&'a Location<'a>),
 }
 
 impl crate::ErrorOutput for Error<'_> {
@@ -131,6 +133,31 @@ impl crate::ErrorOutput for Error<'_> {
                 }],
                 opt: Default::default(),
             },
+            Error::ReadFailure(Location {
+                file,
+                line,
+                lineno,
+                range,
+            }) => Snippet {
+                title: Some(Annotation {
+                    label: Some("Read Error"),
+                    id: None,
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source: line,
+                    line_start: *lineno,
+                    origin: Some(file),
+                    fold: false,
+                    annotations: vec![SourceAnnotation {
+                        label: "",
+                        annotation_type: AnnotationType::Error,
+                        range: *range,
+                    }],
+                }],
+                opt: Default::default(),
+            },
         }
     }
 }
@@ -186,6 +213,12 @@ pub fn eval<'a>(state: &mut State, node: &'a Node) -> Result<(), Error<'a>> {
         Node::Print { .. } => {
             print!("{}", (state.nodes[state.head_index] as char));
             Ok(())
+        }
+        Node::Read { loc } => {
+            match std::io::stdin().read(&mut state.nodes[state.head_index..state.head_index + 1]) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(Error::ReadFailure(loc)),
+            }
         }
     }
 }
