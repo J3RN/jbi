@@ -2,15 +2,17 @@ use crate::{semantic_analyzer::Node, Location};
 use annotate_snippets::snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
 use std::io::Read;
 
+const NODE_LEN: usize = 30_000;
+
 pub struct State {
-    nodes: [u8; 10000],
+    nodes: [u8; NODE_LEN],
     head_index: usize,
 }
 
 impl Default for State {
     fn default() -> State {
         State {
-            nodes: [0; 10000],
+            nodes: [0; NODE_LEN],
             head_index: 0,
         }
     }
@@ -195,7 +197,7 @@ pub fn eval<'a>(state: &mut State, node: &'a Node) -> Result<(), Error<'a>> {
             }
         }
         Node::MoveRight { loc } => {
-            if state.head_index < 9999 {
+            if state.head_index < NODE_LEN - 1 {
                 state.head_index += 1;
                 Ok(())
             } else {
