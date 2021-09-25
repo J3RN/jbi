@@ -1,6 +1,6 @@
 use crate::{semantic_analyzer::Node, Location};
 use annotate_snippets::snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
-use std::io::Read;
+use std::io::{self, Read};
 
 const NODE_LEN: usize = 30_000;
 
@@ -217,7 +217,7 @@ pub fn eval<'a>(state: &mut State, node: &'a Node) -> Result<(), Error<'a>> {
             Ok(())
         }
         Node::Read { loc } => {
-            match std::io::stdin().read(&mut state.nodes[state.head_index..state.head_index + 1]) {
+            match io::stdin().read(&mut state.nodes[state.head_index..state.head_index + 1]) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(Error::ReadFailure(loc)),
             }

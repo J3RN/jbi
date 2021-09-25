@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 annotate-snippets = "0.9.1"
+rustyline = "9.0.0"

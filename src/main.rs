@@ -1,7 +1,8 @@
 use annotate_snippets::{display_list::DisplayList, snippet::Snippet};
+use rustyline::error::ReadlineError;
 use std::env;
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io::Read;
 
 mod lexer;
 mod runtime;
@@ -45,23 +46,24 @@ fn run_file(filename: &str) {
 }
 
 fn run_repl() {
-    let stdin = io::stdin();
+    let rl_config: rustyline::Config = rustyline::Config::builder()
+        .check_cursor_position(true)
+        .build();
+    let mut rl = rustyline::Editor::<()>::with_config(rl_config);
     let mut state = runtime::State::default();
 
     loop {
-        let mut input = String::new();
-
-        print!("jbi> ");
-        io::stdout().flush().unwrap();
-        match stdin.read_line(&mut input) {
-            Ok(0) => {
+        match rl.readline("jbi> ") {
+            Ok(input) => {
+                run(&mut state, &input, "stdin");
+                rl.add_history_entry(input);
+            }
+            Err(ReadlineError::Eof) => {
                 println!("\nGoodbye!");
                 break;
             }
-            Ok(_) => (),
             Err(_) => break,
         }
-        run(&mut state, &input, "stdin")
     }
 }
 
