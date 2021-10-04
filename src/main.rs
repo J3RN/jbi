@@ -5,8 +5,8 @@ use std::fs::File;
 use std::io::Read;
 
 mod lexer;
+mod parser;
 mod runtime;
-mod semantic_analyzer;
 
 pub struct Location<'a> {
     file: &'a str,
@@ -69,7 +69,7 @@ fn run_repl() {
 
 fn run(state: &mut runtime::State, input: &str, filename: &str) {
     match lexer::lex(input, filename) {
-        Ok(toks) => match semantic_analyzer::analyze(&toks) {
+        Ok(toks) => match parser::parse(&toks) {
             Ok(tree) => {
                 if let Err(err) = runtime::eval(state, &tree) {
                     let dl = DisplayList::from(err.to_error());

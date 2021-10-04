@@ -92,7 +92,7 @@ impl crate::ErrorOutput for Error<'_> {
     }
 }
 
-pub fn analyze<'a>(toks: &'a [Token<'a>]) -> Result<Node<'a>, Vec<Error<'a>>> {
+pub fn parse<'a>(toks: &'a [Token<'a>]) -> Result<Node<'a>, Vec<Error<'a>>> {
     let mut tok_iter = toks.iter().peekable();
 
     match parse_exp(&mut tok_iter) {

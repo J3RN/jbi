@@ -1,4 +1,4 @@
-use crate::{semantic_analyzer::Node, Location};
+use crate::{parser::Node, Location};
 use annotate_snippets::snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
 use std::io::{self, Read};
 
