@@ -68,26 +68,20 @@ fn run_repl() {
 }
 
 fn run(state: &mut runtime::State, input: &str, filename: &str) {
-    match lexer::lex(input, filename) {
-        Ok(toks) => match parser::parse(&toks) {
-            Ok(tree) => {
-                if let Err(err) = runtime::eval(state, &tree) {
-                    let dl = DisplayList::from(err.to_error());
-                    eprintln!("{}", dl);
-                }
+    let toks = lexer::lex(input, filename);
+
+    match parser::parse(&toks) {
+        Ok(tree) => {
+            if let Err(err) = runtime::eval(state, &tree) {
+                let dl = DisplayList::from(err.to_error());
+                eprintln!("{}", dl);
             }
-            Err(errs) => {
-                for err in errs {
-                    let dl = DisplayList::from(err.to_error());
-                    eprintln!("{}", dl);
-                }
-            }
-        },
+        }
         Err(errs) => {
             for err in errs {
                 let dl = DisplayList::from(err.to_error());
                 eprintln!("{}", dl);
             }
         }
-    }
+    };
 }
