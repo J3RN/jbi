@@ -23,6 +23,5 @@ You have two options:
 ## TODO
 
 - [ ] Don't immediately give up if a loop is unclosed in REPL. Give the user the opportunity to close it.
-- [ ] Allow readline-style command line editing in REPL.
 - [ ] Tests, probably.
 - [ ] J3RN's Brainf*ck Compiler (JBC) :wink:
